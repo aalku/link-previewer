@@ -58,28 +58,35 @@ export default class MainExtractor {
         this.cheerioApi = load(html);
       }
       const baseUrl = this.getBaseUrl();
-
-      let tiktokDescription = "";
-      let tiktokImage = "";
-      let tiktokMediaType = "";
-      let tiktokFavIcon = "";
+      
+      let specialTitle = "";
+      let specialDescription = "";
+      let specialImage = "";
+      let specialMediaType = "";
+      let specialFavIcon = "";
 
       if (baseUrl.includes("tiktok.com")) {
         const tiktokData = await this.fetchTikTokData();
-        tiktokDescription = tiktokData.description;
-        tiktokImage = tiktokData.image;
-        tiktokMediaType = tiktokData.mediaType;
-        tiktokFavIcon = tiktokData.favIcon;
+        specialDescription = tiktokData.description;
+        specialImage = tiktokData.image;
+        specialMediaType = tiktokData.mediaType;
+        specialFavIcon = tiktokData.favIcon;
+      } else if (baseUrl.includes("youtube.com")) {
+        // Extract youtube data only if it's in anti-bot mode
+        const youtubeBotData = await this.extractYoutubeBotData();
+        specialTitle = youtubeBotData.title;
+        specialDescription = youtubeBotData.description;
+        specialImage = youtubeBotData.image;
       }
 
-      const title = this.getTitle();
-      const description = tiktokDescription || this.getDescription();
+      const title = specialTitle || this.getTitle();
+      const description = specialDescription || this.getDescription();
       const siteName = this.getSiteName();
-      const images = [tiktokImage, ...this.getImages()].filter(Boolean);
-      const favicons = [tiktokFavIcon, ...this.getFavicons()].filter(Boolean);
+      const images = [specialImage, ...this.getImages()].filter(Boolean);
+      const favicons = [specialFavIcon, ...this.getFavicons()].filter(Boolean);
 
       const keywords = this.getKeywords();
-      const mediaType = tiktokMediaType || this.getMediaType();
+      const mediaType = specialMediaType || this.getMediaType();
       const contentType = this.options?.headers?.common?.["Content-Type"] || "";
 
       const charset = contentType ? contentType.split("charset=")[1] : "";
@@ -188,6 +195,74 @@ export default class MainExtractor {
   protected getSiteName = (): string => {
     return this.cheerioApi(OG_SITE_NAME).attr(META_CONTENT) || "";
   };
+  private scanObject = (obj: any, predicate: (obj: any, key: string | null) => boolean, thisKey: string | null = null): any => {
+    if (typeof obj !== "object" || obj === null) return undefined;
+    if (typeof obj === "object" && predicate(obj, thisKey)) {
+      return obj;
+    };
+    for (const k in obj) {
+      if (obj.hasOwnProperty(k)) {
+        const result = this.scanObject(obj[k], predicate, k);
+        if (result !== undefined) return result;
+      }
+    }
+    return undefined;
+  };
+  protected async extractYoutubeBotData(): Promise<{
+    title: string;
+    description: string;
+    image: string;
+  }> {
+    let title = this.getTitle();
+    let description = "";
+    let image = "";
+    if (title.replace(/youtube/gi, "").replace(/[^A-Z0-9]+/gi, "").trim().length > 0) {
+      // Disable everyting because it's not in anti-bot mode
+      return { title: "", description: "", image: "" };
+    } else {
+      this.cheerioApi("#player-placeholder").each((_, element) => {
+        const style = this.cheerioApi(element).attr("style");
+        console.log("player-placeholder style", style);
+        const backgroundImageMatch = style?.match(/background-image:\s*url\(['"]?(.*?)['"]?\)/);
+        if (backgroundImageMatch) {
+          image = backgroundImageMatch[1];
+        }
+      });
+      this.cheerioApi("script").each((_, element) => {
+        const scriptContent = this.cheerioApi(element).text();
+        if (scriptContent.match(/^\s*(var|let|const)\s+ytInitialData\s*=\s*[{]/)) {
+          console.log("Found ytInitialData");
+          const ytInitialData = scriptContent
+            .replace(/^\s*(var|let|const)\s+ytInitialData\s*=\s*/, "")
+            .replace(/\s*;?$/, "");
+            const obj = JSON.parse(ytInitialData);
+            const objTitle = this.scanObject(obj, (o, k) => {
+              return k === "playerOverlayVideoDetailsRenderer" && o.title?.simpleText;
+            });
+            if (objTitle?.title?.simpleText) {
+              title = objTitle.title.simpleText;
+            }
+            const objAuthor = this.scanObject(obj, (o, k) => {
+              return k === "videoDescriptionInfocardsSectionRenderer" && o.sectionTitle?.simpleText;
+            });
+            if (objAuthor?.sectionTitle?.simpleText) {
+              description = 'YouTube video by ' + objAuthor.sectionTitle.simpleText;
+            }
+            const objDescription = this.scanObject(obj, (o, k) => {
+              return k === "attributedDescriptionBodyText" && o.content;
+            });
+            if (objDescription?.content) {
+              description = objDescription.content;
+              if (description.length > 160) {
+                description = description.substring(0, 157) + "...";
+              }
+            }
+
+        }
+      });
+      return { title, description, image };
+    }
+  }
   protected async fetchTikTokData(): Promise<{
     description: string;
     image: string;
