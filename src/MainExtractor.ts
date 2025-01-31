@@ -222,7 +222,7 @@ export default class MainExtractor {
     } else {
       this.cheerioApi("#player-placeholder").each((_, element) => {
         const style = this.cheerioApi(element).attr("style");
-        console.log("player-placeholder style", style);
+        // console.log("player-placeholder style", style);
         const backgroundImageMatch = style?.match(/background-image:\s*url\(['"]?(.*?)['"]?\)/);
         if (backgroundImageMatch) {
           image = backgroundImageMatch[1];
@@ -231,7 +231,7 @@ export default class MainExtractor {
       this.cheerioApi("script").each((_, element) => {
         const scriptContent = this.cheerioApi(element).text();
         if (scriptContent.match(/^\s*(var|let|const)\s+ytInitialData\s*=\s*[{]/)) {
-          console.log("Found ytInitialData");
+          // console.log("Found ytInitialData");
           const ytInitialData = scriptContent
             .replace(/^\s*(var|let|const)\s+ytInitialData\s*=\s*/, "")
             .replace(/\s*;?$/, "");
@@ -241,6 +241,14 @@ export default class MainExtractor {
             });
             if (objTitle?.title?.simpleText) {
               title = objTitle.title.simpleText;
+            }
+            if (title.replace(/youtube/gi, "").replace(/[^A-Z0-9]+/gi, "").trim().length == 0) {
+              const objTitleShort = this.scanObject(obj, (o, k) => {
+                return k === "shortsVideoTitleViewModel" && o.text?.content;
+              });
+              if (objTitleShort?.text?.content) {
+                title = objTitleShort.text.content;
+              }
             }
             const objAuthor = this.scanObject(obj, (o, k) => {
               return k === "videoDescriptionInfocardsSectionRenderer" && o.sectionTitle?.simpleText;
@@ -256,8 +264,27 @@ export default class MainExtractor {
               if (description.length > 160) {
                 description = description.substring(0, 157) + "...";
               }
+            } else {
+              const objDescriptionShort = this.scanObject(obj, (o, k) => {
+                return k === "expandableVideoDescriptionBodyRenderer" && o.descriptionBodyText?.runs;
+              });
+              if (objDescriptionShort?.descriptionBodyText?.runs) {
+                description = objDescriptionShort.descriptionBodyText.runs.map((run: any) => run.text).join("\r\n");
+                if (description.length > 160) {
+                  description = description.substring(0, 157) + "...";
+                }
+              } else {
+                description = "";
+              }
             }
-
+            if (!image?.length) {
+              const objImageShort = this.scanObject(obj, (o, k) => {
+                return k === "contentPreviewImageViewModel" && o.image?.sources;
+              });
+              if (objImageShort?.image?.sources) {
+                image = objImageShort.image.sources?.sort((a: any, b: any) => b.width - a.width)?.[0]?.url;
+              }
+            }
         }
       });
       return { title, description, image };

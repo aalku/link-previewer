@@ -5,7 +5,7 @@
     "cheerio": "^1.0.0-rc.12"
   },
   "name": "@aalku/link-previewer",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Simple node js package for getting meta data from link",
   "main": "build/index.js",
   "types": "build/index.d.ts",

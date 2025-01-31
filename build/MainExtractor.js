@@ -265,17 +265,17 @@ var MainExtractor = /** @class */ (function () {
                 else {
                     this.cheerioApi("#player-placeholder").each(function (_, element) {
                         var style = _this.cheerioApi(element).attr("style");
-                        console.log("player-placeholder style", style);
+                        // console.log("player-placeholder style", style);
                         var backgroundImageMatch = style === null || style === void 0 ? void 0 : style.match(/background-image:\s*url\(['"]?(.*?)['"]?\)/);
                         if (backgroundImageMatch) {
                             image = backgroundImageMatch[1];
                         }
                     });
                     this.cheerioApi("script").each(function (_, element) {
-                        var _a, _b;
+                        var _a, _b, _c, _d, _e, _f, _g, _h;
                         var scriptContent = _this.cheerioApi(element).text();
                         if (scriptContent.match(/^\s*(var|let|const)\s+ytInitialData\s*=\s*[{]/)) {
-                            console.log("Found ytInitialData");
+                            // console.log("Found ytInitialData");
                             var ytInitialData = scriptContent
                                 .replace(/^\s*(var|let|const)\s+ytInitialData\s*=\s*/, "")
                                 .replace(/\s*;?$/, "");
@@ -287,11 +287,20 @@ var MainExtractor = /** @class */ (function () {
                             if ((_a = objTitle === null || objTitle === void 0 ? void 0 : objTitle.title) === null || _a === void 0 ? void 0 : _a.simpleText) {
                                 title = objTitle.title.simpleText;
                             }
+                            if (title.replace(/youtube/gi, "").replace(/[^A-Z0-9]+/gi, "").trim().length == 0) {
+                                var objTitleShort = _this.scanObject(obj, function (o, k) {
+                                    var _a;
+                                    return k === "shortsVideoTitleViewModel" && ((_a = o.text) === null || _a === void 0 ? void 0 : _a.content);
+                                });
+                                if ((_b = objTitleShort === null || objTitleShort === void 0 ? void 0 : objTitleShort.text) === null || _b === void 0 ? void 0 : _b.content) {
+                                    title = objTitleShort.text.content;
+                                }
+                            }
                             var objAuthor = _this.scanObject(obj, function (o, k) {
                                 var _a;
                                 return k === "videoDescriptionInfocardsSectionRenderer" && ((_a = o.sectionTitle) === null || _a === void 0 ? void 0 : _a.simpleText);
                             });
-                            if ((_b = objAuthor === null || objAuthor === void 0 ? void 0 : objAuthor.sectionTitle) === null || _b === void 0 ? void 0 : _b.simpleText) {
+                            if ((_c = objAuthor === null || objAuthor === void 0 ? void 0 : objAuthor.sectionTitle) === null || _c === void 0 ? void 0 : _c.simpleText) {
                                 description = 'YouTube video by ' + objAuthor.sectionTitle.simpleText;
                             }
                             var objDescription = _this.scanObject(obj, function (o, k) {
@@ -301,6 +310,30 @@ var MainExtractor = /** @class */ (function () {
                                 description = objDescription.content;
                                 if (description.length > 160) {
                                     description = description.substring(0, 157) + "...";
+                                }
+                            }
+                            else {
+                                var objDescriptionShort = _this.scanObject(obj, function (o, k) {
+                                    var _a;
+                                    return k === "expandableVideoDescriptionBodyRenderer" && ((_a = o.descriptionBodyText) === null || _a === void 0 ? void 0 : _a.runs);
+                                });
+                                if ((_d = objDescriptionShort === null || objDescriptionShort === void 0 ? void 0 : objDescriptionShort.descriptionBodyText) === null || _d === void 0 ? void 0 : _d.runs) {
+                                    description = objDescriptionShort.descriptionBodyText.runs.map(function (run) { return run.text; }).join("\r\n");
+                                    if (description.length > 160) {
+                                        description = description.substring(0, 157) + "...";
+                                    }
+                                }
+                                else {
+                                    description = "";
+                                }
+                            }
+                            if (!(image === null || image === void 0 ? void 0 : image.length)) {
+                                var objImageShort = _this.scanObject(obj, function (o, k) {
+                                    var _a;
+                                    return k === "contentPreviewImageViewModel" && ((_a = o.image) === null || _a === void 0 ? void 0 : _a.sources);
+                                });
+                                if ((_e = objImageShort === null || objImageShort === void 0 ? void 0 : objImageShort.image) === null || _e === void 0 ? void 0 : _e.sources) {
+                                    image = (_h = (_g = (_f = objImageShort.image.sources) === null || _f === void 0 ? void 0 : _f.sort(function (a, b) { return b.width - a.width; })) === null || _g === void 0 ? void 0 : _g[0]) === null || _h === void 0 ? void 0 : _h.url;
                                 }
                             }
                         }
