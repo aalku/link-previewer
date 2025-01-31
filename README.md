@@ -1,5 +1,5 @@
 # Link Previewer
-`@edapess/link-previewer` is a simple tool for extracting link preview data from web pages, including titles, descriptions, images, and more. This package is especially useful for applications that need to display rich link previews, such as social media platforms or messaging apps.
+`@aalku/link-previewer` is a simple tool for extracting link preview data from web pages, including titles, descriptions, images, and more. This package is especially useful for applications that need to display rich link previews, such as social media platforms or messaging apps.
 
 # Features
 - Extracts title, description, site name, images, favicons, and more from web pages.
@@ -11,11 +11,11 @@
 Install the package using npm or yarn:
 
 ```bash
-npm install @edapess/link-previewer
+npm install @aalku/link-previewer
 ```
 or
 ```bash
-yarn add @edapess/link-previewer
+yarn add @aalku/link-previewer
 ```
 # Usage
 To use the link-previewer, import the getLinkPreviewData function and call it with the URL you want to preview. You can also pass optional headers and timeout settings.
@@ -23,7 +23,7 @@ To use the link-previewer, import the getLinkPreviewData function and call it wi
 # Example
 
 ```javascript
-import { getLinkPreviewData } from '@edapess/link-previewer';
+import { getLinkPreviewData } from '@aalku/link-previewer';
 
 const fetchPreviewData = async (url) => {
   try {
@@ -77,6 +77,9 @@ The `getLinkPreviewData` function accepts an options object with the following p
 - `headers`: Custom headers to use when making the request. Default headers include user-agent, Accept-Language, Access-Control-Allow-Origin, and Accept.
 - `noHeaders`: If set to true, no headers will be sent with the request. Defaults to false.
 - `timeout`: The request timeout in milliseconds. Defaults to 3000.
+# Author
+This is a fork from https://github.com/edapess/link-previewer, and me, @aalku, just extended the support for Youtube
+
 # Contributing
 Contributions are welcome! If you find a bug or have a feature request, please open an issue on GitHub.
 

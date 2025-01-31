@@ -24,6 +24,12 @@ export default class MainExtractor {
     protected getKeywords(): string[];
     protected getMediaType: () => string;
     protected getSiteName: () => string;
+    private scanObject;
+    protected extractYoutubeBotData(): Promise<{
+        title: string;
+        description: string;
+        image: string;
+    }>;
     protected fetchTikTokData(): Promise<{
         description: string;
         image: string;

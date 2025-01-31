@@ -9,8 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
@@ -106,6 +106,23 @@ var MainExtractor = /** @class */ (function () {
         this.getSiteName = function () {
             return _this.cheerioApi(constants_1.OG_SITE_NAME).attr(constants_1.META_CONTENT) || "";
         };
+        this.scanObject = function (obj, predicate, thisKey) {
+            if (thisKey === void 0) { thisKey = null; }
+            if (typeof obj !== "object" || obj === null)
+                return undefined;
+            if (typeof obj === "object" && predicate(obj, thisKey)) {
+                return obj;
+            }
+            ;
+            for (var k in obj) {
+                if (obj.hasOwnProperty(k)) {
+                    var result = _this.scanObject(obj[k], predicate, k);
+                    if (result !== undefined)
+                        return result;
+                }
+            }
+            return undefined;
+        };
         this.getTitle = function () {
             return (_this.cheerioApi(constants_1.OG_TITLE).attr(constants_1.META_CONTENT) ||
                 _this.cheerioApi(constants_1.TITLE_TAG).text() ||
@@ -122,12 +139,12 @@ var MainExtractor = /** @class */ (function () {
     };
     MainExtractor.prototype.getlinkPreviewData = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var html, baseUrl, tiktokDescription, tiktokImage, tiktokMediaType, tiktokFavIcon, tiktokData, title, description, siteName, images, favicons, keywords, mediaType, contentType, charset, error_2;
+            var html, baseUrl, specialTitle, specialDescription, specialImage, specialMediaType, specialFavIcon, tiktokData, youtubeBotData, title, description, siteName, images, favicons, keywords, mediaType, contentType, charset, error_2;
             var _a, _b, _c;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
-                        _d.trys.push([0, 4, , 5]);
+                        _d.trys.push([0, 6, , 7]);
                         return [4 /*yield*/, this.fetchHTML()];
                     case 1:
                         html = _d.sent();
@@ -135,27 +152,37 @@ var MainExtractor = /** @class */ (function () {
                             this.cheerioApi = (0, cheerio_1.load)(html);
                         }
                         baseUrl = this.getBaseUrl();
-                        tiktokDescription = "";
-                        tiktokImage = "";
-                        tiktokMediaType = "";
-                        tiktokFavIcon = "";
+                        specialTitle = "";
+                        specialDescription = "";
+                        specialImage = "";
+                        specialMediaType = "";
+                        specialFavIcon = "";
                         if (!baseUrl.includes("tiktok.com")) return [3 /*break*/, 3];
                         return [4 /*yield*/, this.fetchTikTokData()];
                     case 2:
                         tiktokData = _d.sent();
-                        tiktokDescription = tiktokData.description;
-                        tiktokImage = tiktokData.image;
-                        tiktokMediaType = tiktokData.mediaType;
-                        tiktokFavIcon = tiktokData.favIcon;
-                        _d.label = 3;
+                        specialDescription = tiktokData.description;
+                        specialImage = tiktokData.image;
+                        specialMediaType = tiktokData.mediaType;
+                        specialFavIcon = tiktokData.favIcon;
+                        return [3 /*break*/, 5];
                     case 3:
-                        title = this.getTitle();
-                        description = tiktokDescription || this.getDescription();
+                        if (!baseUrl.includes("youtube.com")) return [3 /*break*/, 5];
+                        return [4 /*yield*/, this.extractYoutubeBotData()];
+                    case 4:
+                        youtubeBotData = _d.sent();
+                        specialTitle = youtubeBotData.title;
+                        specialDescription = youtubeBotData.description;
+                        specialImage = youtubeBotData.image;
+                        _d.label = 5;
+                    case 5:
+                        title = specialTitle || this.getTitle();
+                        description = specialDescription || this.getDescription();
                         siteName = this.getSiteName();
-                        images = __spreadArray([tiktokImage], this.getImages(), true).filter(Boolean);
-                        favicons = __spreadArray([tiktokFavIcon], this.getFavicons(), true).filter(Boolean);
+                        images = __spreadArray([specialImage], this.getImages(), true).filter(Boolean);
+                        favicons = __spreadArray([specialFavIcon], this.getFavicons(), true).filter(Boolean);
                         keywords = this.getKeywords();
-                        mediaType = tiktokMediaType || this.getMediaType();
+                        mediaType = specialMediaType || this.getMediaType();
                         contentType = ((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.headers) === null || _b === void 0 ? void 0 : _b.common) === null || _c === void 0 ? void 0 : _c["Content-Type"]) || "";
                         charset = contentType ? contentType.split("charset=")[1] : "";
                         return [2 /*return*/, {
@@ -170,10 +197,10 @@ var MainExtractor = /** @class */ (function () {
                                 charset: charset,
                                 keywords: keywords,
                             }];
-                    case 4:
+                    case 6:
                         error_2 = _d.sent();
                         throw error_2;
-                    case 5: return [2 /*return*/];
+                    case 7: return [2 /*return*/];
                 }
             });
         });
@@ -222,6 +249,67 @@ var MainExtractor = /** @class */ (function () {
             this.cheerioApi(constants_1.META_KEYWORDS).attr(constants_1.META_CONTENT) ||
             "";
         return keywords ? keywords.split(",") : [];
+    };
+    MainExtractor.prototype.extractYoutubeBotData = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var title, description, image;
+            var _this = this;
+            return __generator(this, function (_a) {
+                title = this.getTitle();
+                description = "";
+                image = "";
+                if (title.replace(/youtube/gi, "").replace(/[^A-Z0-9]+/gi, "").trim().length > 0) {
+                    // Disable everyting because it's not in anti-bot mode
+                    return [2 /*return*/, { title: "", description: "", image: "" }];
+                }
+                else {
+                    this.cheerioApi("#player-placeholder").each(function (_, element) {
+                        var style = _this.cheerioApi(element).attr("style");
+                        console.log("player-placeholder style", style);
+                        var backgroundImageMatch = style === null || style === void 0 ? void 0 : style.match(/background-image:\s*url\(['"]?(.*?)['"]?\)/);
+                        if (backgroundImageMatch) {
+                            image = backgroundImageMatch[1];
+                        }
+                    });
+                    this.cheerioApi("script").each(function (_, element) {
+                        var _a, _b;
+                        var scriptContent = _this.cheerioApi(element).text();
+                        if (scriptContent.match(/^\s*(var|let|const)\s+ytInitialData\s*=\s*[{]/)) {
+                            console.log("Found ytInitialData");
+                            var ytInitialData = scriptContent
+                                .replace(/^\s*(var|let|const)\s+ytInitialData\s*=\s*/, "")
+                                .replace(/\s*;?$/, "");
+                            var obj = JSON.parse(ytInitialData);
+                            var objTitle = _this.scanObject(obj, function (o, k) {
+                                var _a;
+                                return k === "playerOverlayVideoDetailsRenderer" && ((_a = o.title) === null || _a === void 0 ? void 0 : _a.simpleText);
+                            });
+                            if ((_a = objTitle === null || objTitle === void 0 ? void 0 : objTitle.title) === null || _a === void 0 ? void 0 : _a.simpleText) {
+                                title = objTitle.title.simpleText;
+                            }
+                            var objAuthor = _this.scanObject(obj, function (o, k) {
+                                var _a;
+                                return k === "videoDescriptionInfocardsSectionRenderer" && ((_a = o.sectionTitle) === null || _a === void 0 ? void 0 : _a.simpleText);
+                            });
+                            if ((_b = objAuthor === null || objAuthor === void 0 ? void 0 : objAuthor.sectionTitle) === null || _b === void 0 ? void 0 : _b.simpleText) {
+                                description = 'YouTube video by ' + objAuthor.sectionTitle.simpleText;
+                            }
+                            var objDescription = _this.scanObject(obj, function (o, k) {
+                                return k === "attributedDescriptionBodyText" && o.content;
+                            });
+                            if (objDescription === null || objDescription === void 0 ? void 0 : objDescription.content) {
+                                description = objDescription.content;
+                                if (description.length > 160) {
+                                    description = description.substring(0, 157) + "...";
+                                }
+                            }
+                        }
+                    });
+                    return [2 /*return*/, { title: title, description: description, image: image }];
+                }
+                return [2 /*return*/];
+            });
+        });
     };
     MainExtractor.prototype.fetchTikTokData = function () {
         return __awaiter(this, void 0, void 0, function () {

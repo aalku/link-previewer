@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractFavicons = void 0;
+exports.extractFavicons = extractFavicons;
 var constants_1 = require("../constants");
 function extractFavicons($, baseUrl) {
     var favicons = [];
@@ -11,4 +11,3 @@ function extractFavicons($, baseUrl) {
     });
     return favicons;
 }
-exports.extractFavicons = extractFavicons;
