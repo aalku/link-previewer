@@ -8,8 +8,7 @@
     "target": "es5",
     "skipLibCheck": true,
     "strict": true,
-    "resolveJsonModule": true,
-    "module": "commonjs",
+    "resolveJsonModule": true
   },
   "exclude": ["node_modules", "build"]
-  }
+}

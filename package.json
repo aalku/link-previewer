@@ -1,26 +1,26 @@
 {
-  "author": "link-previewer <linkpreviewer@aalku.org>",
+  "author": "edapess <edmondavetisyanw@gmail.com>",
   "dependencies": {
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12"
   },
-  "name": "@aalku/link-previewer",
-  "version": "2.0.1",
+  "name": "@edapess/link-previewer",
+  "version": "2.0.0",
   "description": "Simple node js package for getting meta data from link",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/aalku/link-previewer.git"
+    "url": "git+ssh://git@github.com/edapess/link-previewer.git"
   },
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.12.12"
   },
   "bugs": {
-    "url": "https://github.com/aalku/link-previewer/issues"
+    "url": "https://github.com/edapess/link-previewer/issues"
   },
-  "homepage": "https://github.com/aalku/link-previewer#readme",
+  "homepage": "https://github.com/edapess/link-previewer#readme",
   "scripts": {
     "test": "exit 0"
   }

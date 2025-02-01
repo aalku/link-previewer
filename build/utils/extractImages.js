@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractImages = extractImages;
+exports.extractImages = void 0;
 var constants_1 = require("../constants");
 function extractImages($) {
     var images = [];
@@ -30,3 +30,4 @@ function extractImages($) {
     }
     return images;
 }
+exports.extractImages = extractImages;
